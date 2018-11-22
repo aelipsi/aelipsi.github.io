@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html>
+<head>
+<script type="text/javascript">
+function getURLParameter(name) {
+  return decodeURIComponent((new RegExp('[?|&]' + name + '=' + '([^&;]+?)(&|#|;|$)').exec(location.search) || [null, ''])[1].replace(/\+/g, '%20')) || null;
+}
+window.addEventListener('load', function() { 
+    let bg = getURLParameter("background");
+    if (!bg.startsWith("http:") && !bg.startsWith("https:")) {
+            bg="javascript:alert('Invalid background');";
+    }
+    document.getElementById("body").setAttribute('style','background-image:url("'+bg+'")');
+    const limit = 6;
+    for (let index = 1; index <= limit; index++) {
+        let gif = getURLParameter("gif"+index);
+        if (!gif.startsWith("http:") && !gif.startsWith("https:")) {
+            gif="javascript:alert('Invalid gif " + index + "');";
+        }
+        document.getElementById("gif"+index).setAttribute('src',gif);
+    }
+}, false)
+</script>
+<style>
+body {
+    -webkit-background-size: cover;
+    -moz-background-size: cover;
+    -o-background-size: cover;
+    background-size: cover;
+    width:100vw;
+    height:100vh;
+}
+iframe.gif {
+    width:33vw;
+    height: 33vh;
+    float:left;
+    margin: 0 auto;
+    display: inline-block;
+    border: 0;
+}
+div.space {
+    height: 33vh;
+    clear: both;
+}
+div.container {
+    margin: auto;
+    text-align: center;
+}
+</style>
+</head>
+
+<body id="body">
+	<div class="container">
+		<iframe id="gif1" class="gif" sandbox="allow-same-origin allow-scripts"></iframe>
+		<iframe id="gif2" class="gif" sandbox="allow-same-origin allow-scripts"></iframe>
+		<iframe id="gif3" class="gif" sandbox="allow-same-origin allow-scripts"></iframe>
+		<div class="space"></div>
+		<iframe id="gif4" class="gif" sandbox="allow-same-origin allow-scripts"></iframe>
+		<iframe id="gif5" class="gif" sandbox="allow-same-origin allow-scripts"></iframe>
+		<iframe id="gif6" class="gif" sandbox="allow-same-origin allow-scripts"></iframe>
+	</div>
+</body>
+
+</html>
