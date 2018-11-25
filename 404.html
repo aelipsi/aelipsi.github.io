@@ -20,7 +20,7 @@
 			};
 			function addUrlParameter(param, value) {
 				let pageUrl = window.location;
-				if (pageUrl.contains('?')) {
+				if (pageUrl.indexOf('?') > -1) {
 					return pageUrl + '&' + param + '=' + value;
 				} else {
 					return pageUrl + '?' + param + '=' + value;
