@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<title>TV Listings</title>
+		<script
+  src="https://code.jquery.com/jquery-3.3.1.min.js"
+    integrity="sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8="
+      crossorigin="anonymous"></script>
+		<style>
+			body {
+				color: white;
+				background-color: black
+			}
+		</style>
+		<script>
+			/*
+			* on page load
+			* Initialize the input forms
+			*   and table contents
+			*/
+			$(document).ready(function() {
+				// Date is in the timedate-local input
+				//  field format
+				let timestamp = getUrlParameter('date');
+				let zipCode = getUrlParameter('zipCode');
+				
+				// Default to now
+				if (timestamp === undefined) {
+					timestamp = new Date();
+				}
+
+				$("#date").val(now(timestamp));
+				$("#zipCode").val(zipCode);
+
+				// Zip code must be provided
+				if (zipCode !== undefined) {
+					// Make API call, timestamp must be in Unix seconds format
+					// (Date.parse returns it in milliseconds)
+					makeRequest(Date.parse(timestamp)/1000, zipCode); 
+				}
+			});
+			// List of channels to include
+			const inclusions = ['10.1', '10.2', '10.3', '19.1', '19.2', '19.3', '19.4', '25.1', '25.2' /*, '25.3'*/ , '25.4', '25.5', '35.1', '35.2', '35.3', '47.1', '47.2', '47.3', /*'47.4', '47.5', '47.6',*/ '57.1', '57.2', '57.3', '57.4', '63.1', '63.2', '63.3', '63.4', '63.5'];
+			
+			// Make the HTTP request
+			function makeRequest(timestamp, zipcode) {
+				// Don't hit the HTTP endpoint if either are invalid
+				if (timestamp === undefined || zipcode === undefined) {
+					return;
+				}
+				// TODO: Validation on both fields
+				const uri = "https://tvlistings.zap2it.com/api/grid?lineupId=USA-lineupId-DEFAULT&timespan=1&headendId=lineupId&country=USA&device=-&postalCode="+zipcode+"&isOverride=true&time="+timestamp+"&pref=-&userId=-&aid=gapzap";
+				$.get( uri, function( data ) {
+				  writeRows(data);
+
+				});
+			};
+
+			/*
+			* writeRows
+			* Input a JSON webservice response
+			* Write a table structure in the #table div
+			*/
+			function writeRows(response) {
+				let channelList = response.channels;
+				const len = channelList.length;
+			       	let table = $("<table></table>");	
+				for (let i = 0 ; i < len; i++) {
+					let channel = channelList[i];
+				        if (inclusions.indexOf(channel.channelNo) !== -1) {
+						let row = $("<tr></tr>");
+						row.append("<td>"+channel.callSign + " " + channel.channelNo +"</td>")
+						table.append(row);	
+					        let eventLen = channel.events.length;
+						for (let j = 0; j < eventLen; j++) {
+							let event = channel.events[j];
+							row.append('<td title="'+escapeXml(event.program.shortDesc)+'">'+event.program.title+'<br />'+prettyDate(event.startTime)+'</td>');
+						}       
+					}
+				}
+				$("#table").append(table);
+			};
+
+
+			/*
+			* getUrlParameter
+			* Input a parameter name
+			* Return the parameter value, 
+			*  boolean true if defined, 
+			*  undefined if not present
+			*/
+			function getUrlParameter(sParam) {
+	    			var sPageURL = window.location.search.substring(1),
+	            			sURLVariables = sPageURL.split('&'),
+		            		sParameterName,
+			            	i;
+
+	        		for (i = 0; i < sURLVariables.length; i++) {
+			        	sParameterName = sURLVariables[i].split('=');
+
+				        if (sParameterName[0] === sParam) {
+				            return sParameterName[1] === undefined ? true : decodeURIComponent(sParameterName[1]);
+				        }
+		          	}
+			};
+			/*
+			* twoDigitPad
+			* Take a n-digit number and
+			*  ensure it is at least 2 characters
+			*/
+			function twoDigitPad(date) {
+				const str = date.toString();
+				return ('00'+str).substring(str.length);
+			};
+			/* 
+			* now (bad name)
+			* Return formatted date string for 
+			*  a HTML datetime-local input
+			*/
+			function now(date) {
+				if (date === undefined) {
+	        			date = new Date();
+				} else {
+					date = new Date(date);
+				}
+		        	return date.getFullYear() + "-" + twoDigitPad(date.getMonth()+1) + "-" + twoDigitPad(date.getDate()) + "T" + twoDigitPad(date.getHours()) + ":" + twoDigitPad((date.getMinutes() - date.getMinutes() % 30));
+			};
+			/* 
+			* prettyDate
+			* Return formatted date string
+			*  for just a time
+			* Ex: "3:05 PM"
+			*/
+			function prettyDate(dateString) {
+				const date = new Date(dateString);
+				return (date.getHours() % 12 == 0 ? '12' : date.getHours()%12) + ":" + twoDigitPad(date.getMinutes()) + " " + (date.getHours() < 12 ? "AM" : "PM");
+			};
+			/*
+			* escapeXml
+			* Return an XML-escaped
+			* version of a string
+			*/ 
+			function escapeXml(unsafe) {
+				if (unsafe === null) { return ""};
+				return unsafe.replace(/[<>&'"]/g, function (c) {
+					switch (c) {
+				                case '<': return '&lt;';
+				            	case '>': return '&gt;';
+				                case '&': return '&amp;';
+						case '\'': return '&apos;';												               case '"': return '&quot;';
+																					         }													     			});
+			};
+			function changeDate(offset) {
+				let oldValue = $("#date").val();
+				let newValue = parseInt(new Date(oldValue).getTime())+parseInt(offset*60*1000);
+				$("#date").val(now(newValue - newValue % 1800));
+			};
+		</script>
+	</head>
+	<body>
+		<form method="get">
+			<input type="button" onclick="changeDate(-30);" value="<"/>
+			<input name="date" id="date" type="datetime-local"/>
+			<input id="zipCode" name="zipCode" hidden/>
+			<input type="button" onclick="changeDate(30);" value=">"/>
+			<input type="submit"/>
+		</form>
+		<div id="table">
+
+		</div>
+		
+	</body>
+</html>
