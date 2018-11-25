@@ -51,8 +51,8 @@
 
       const flag = "is404";
       var l = window.location;
-      if (getUrlParameter(flag) !== true) {
-	
+      if (getUrlParameter(flag) !== 'true') {
+	l = addUrlParameter(flag, 'true');
       } 
 
 
